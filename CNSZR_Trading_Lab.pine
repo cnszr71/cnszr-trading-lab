@@ -1,0 +1,65 @@
+//@version=6
+indicator("CNSZR Trading Lab | Trend + ADX + Bollinger", overlay=true, max_labels_count=500)
+
+// CNSZR Trading Lab — v1.0
+// Educational technical-analysis indicator. Not financial advice.
+
+// ── Inputs
+groupTrend = "1. Trend (SuperTrend)"
+stAtrLength = input.int(10, "ATR Length", minval=1, group=groupTrend)
+stFactor = input.float(3.0, "Factor", minval=0.1, step=0.1, group=groupTrend)
+
+groupAdx = "2. Trend Strength (ADX)"
+diLength = input.int(14, "DI Length", minval=1, group=groupAdx)
+adxSmoothing = input.int(14, "ADX Smoothing", minval=1, group=groupAdx)
+adxMinimum = input.float(20.0, "Minimum ADX", minval=1, step=0.5, group=groupAdx)
+
+groupBB = "3. Bollinger Bands"
+bbLength = input.int(20, "Length", minval=1, group=groupBB)
+bbMult = input.float(2.0, "Standard Deviation", minval=0.1, step=0.1, group=groupBB)
+showBB = input.bool(true, "Show Bollinger Bands", group=groupBB)
+useBBFilter = input.bool(false, "Require price on correct side of BB basis", group=groupBB)
+
+groupSignals = "4. Signals"
+showSignals = input.bool(true, "Show AL/SAT labels", group=groupSignals)
+confirmOnClose = input.bool(true, "Confirm signals at candle close", group=groupSignals)
+
+// ── Calculations
+[superTrend, stDirection] = ta.supertrend(stFactor, stAtrLength)
+[plusDI, minusDI, adxValue] = ta.dmi(diLength, adxSmoothing)
+[bbBasis, bbUpper, bbLower] = ta.bb(close, bbLength, bbMult)
+
+// In TradingView's ta.supertrend(), direction < 0 indicates an uptrend.
+isUpTrend = stDirection < 0
+isDownTrend = stDirection > 0
+trendTurnedUp = isUpTrend and stDirection[1] > 0
+trendTurnedDown = isDownTrend and stDirection[1] < 0
+strongTrend = adxValue >= adxMinimum
+buySideOk = not useBBFilter or close > bbBasis
+sellSideOk = not useBBFilter or close < bbBasis
+barConfirmed = not confirmOnClose or barstate.isconfirmed
+
+buySignal = trendTurnedUp and strongTrend and buySideOk and barConfirmed
+sellSignal = trendTurnedDown and strongTrend and sellSideOk and barConfirmed
+
+// ── Chart
+plot(isUpTrend ? superTrend : na, "SuperTrend Up", color=color.lime, linewidth=2, style=plot.style_linebr)
+plot(isDownTrend ? superTrend : na, "SuperTrend Down", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(showBB ? bbBasis : na, "BB Basis", color=color.orange, linewidth=1)
+bbUpperPlot = plot(showBB ? bbUpper : na, "BB Upper", color=color.new(color.blue, 25), linewidth=1)
+bbLowerPlot = plot(showBB ? bbLower : na, "BB Lower", color=color.new(color.blue, 25), linewidth=1)
+fill(bbUpperPlot, bbLowerPlot, color=showBB ? color.new(color.blue, 93) : na, title="Bollinger Fill")
+
+plotshape(showSignals and buySignal, title="BUY", text="AL", style=shape.labelup, location=location.belowbar, color=color.lime, textcolor=color.black, size=size.small)
+plotshape(showSignals and sellSignal, title="SELL", text="SAT", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.small)
+
+barcolor(isUpTrend ? color.new(color.lime, 75) : isDownTrend ? color.new(color.red, 75) : na)
+
+// Extra values visible in the Data Window
+plot(adxValue, "ADX (Data Window)", color=color.purple, display=display.data_window)
+plot(plusDI, "+DI (Data Window)", color=color.green, display=display.data_window)
+plot(minusDI, "-DI (Data Window)", color=color.red, display=display.data_window)
+
+// ── Alerts
+alertcondition(buySignal, title="CNSZR Trading Lab AL", message="CNSZR Trading Lab: AL sinyali | {{ticker}} | {{interval}} | Fiyat: {{close}}")
+alertcondition(sellSignal, title="CNSZR Trading Lab SAT", message="CNSZR Trading Lab: SAT sinyali | {{ticker}} | {{interval}} | Fiyat: {{close}}")
