@@ -1,0 +1,63 @@
+//@version=6
+indicator("CNSZR Trading Lab — Trend Signals", shorttitle="CNSZR TL", overlay=true, max_labels_count=500)
+
+// ── Inputs
+groupTrend = "Trend"
+stAtrLength = input.int(10, "SuperTrend ATR Length", minval=1, group=groupTrend)
+stFactor = input.float(3.0, "SuperTrend Factor", minval=0.1, step=0.1, group=groupTrend)
+
+groupFilters = "Filters"
+useAdx = input.bool(true, "Use ADX strength filter", group=groupFilters)
+diLength = input.int(14, "DI Length", minval=1, group=groupFilters)
+adxSmoothing = input.int(14, "ADX Smoothing", minval=1, group=groupFilters)
+adxMinimum = input.float(20.0, "Minimum ADX", minval=1, step=0.5, group=groupFilters)
+useBollinger = input.bool(true, "Use Bollinger basis filter", group=groupFilters)
+bbLength = input.int(20, "Bollinger Length", minval=1, group=groupFilters)
+bbMultiplier = input.float(2.0, "Bollinger Deviation", minval=0.1, step=0.1, group=groupFilters)
+
+groupDisplay = "Display"
+showBands = input.bool(true, "Show Bollinger Bands", group=groupDisplay)
+showBackground = input.bool(false, "Tint trend background", group=groupDisplay)
+
+// ── Calculations
+[superTrend, stDirection] = ta.supertrend(stFactor, stAtrLength)
+trendUp = stDirection < 0
+trendDown = stDirection > 0
+
+[plusDI, minusDI, adx] = ta.dmi(diLength, adxSmoothing)
+adxOk = not useAdx or adx >= adxMinimum
+
+bbBasis = ta.sma(close, bbLength)
+bbDeviation = bbMultiplier * ta.stdev(close, bbLength)
+bbUpper = bbBasis + bbDeviation
+bbLower = bbBasis - bbDeviation
+
+longFilterOk = not useBollinger or close > bbBasis
+shortFilterOk = not useBollinger or close < bbBasis
+
+// Only trigger when SuperTrend changes direction; filters reduce weaker signals.
+longSignal = ta.change(stDirection) < 0 and adxOk and longFilterOk
+shortSignal = ta.change(stDirection) > 0 and adxOk and shortFilterOk
+
+// ── Plots
+upTrendPlot = plot(trendUp ? superTrend : na, "SuperTrend Up", color=color.lime, linewidth=2, style=plot.style_linebr)
+downTrendPlot = plot(trendDown ? superTrend : na, "SuperTrend Down", color=color.red, linewidth=2, style=plot.style_linebr)
+
+plot(showBands ? bbBasis : na, "BB Basis", color=color.orange)
+bbUpperPlot = plot(showBands ? bbUpper : na, "BB Upper", color=color.new(color.blue, 35))
+bbLowerPlot = plot(showBands ? bbLower : na, "BB Lower", color=color.new(color.blue, 35))
+fill(bbUpperPlot, bbLowerPlot, color=showBands ? color.new(color.blue, 92) : na, title="Bollinger Fill")
+
+bgcolor(showBackground ? (trendUp ? color.new(color.green, 92) : color.new(color.red, 92)) : na)
+
+plotshape(longSignal, title="AL Signal", text="AL", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.small)
+plotshape(shortSignal, title="SAT Signal", text="SAT", style=shape.labeldown, location=location.abovebar, color=color.red, textcolor=color.white, size=size.small)
+
+// Data-window values for review
+plot(adx, "ADX", color=color.new(color.purple, 100), display=display.data_window)
+plot(plusDI, "+DI", color=color.new(color.green, 100), display=display.data_window)
+plot(minusDI, "-DI", color=color.new(color.red, 100), display=display.data_window)
+
+// ── Alerts
+alertcondition(longSignal, title="CNSZR AL", message="CNSZR Trading Lab: AL signal on {{ticker}} ({{interval}}), close={{close}}")
+alertcondition(shortSignal, title="CNSZR SAT", message="CNSZR Trading Lab: SAT signal on {{ticker}} ({{interval}}), close={{close}}")
