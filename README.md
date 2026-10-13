@@ -1,25 +1,23 @@
 # CNSZR Trading Lab
 
-TradingView için Pine Script v6 tabanlı indikatör geliştirme alanı.
+TradingView için Pine Script v6 ile geliştirilen teknik analiz indikatörü.
 
-## İlk sürüm: Trend Signals
+## v1.0 özellikleri
 
-Dosya: `CNSZR_Trading_Lab_Trend_Signals.pine`
-
-Özellikler:
-- SuperTrend yön değişimlerinde AL/SAT sinyalleri
-- İsteğe bağlı ADX trend gücü filtresi
-- İsteğe bağlı Bollinger orta çizgisi filtresi
-- SuperTrend ve Bollinger çizimleri
-- TradingView alarm koşulları
+- **SuperTrend:** Trend yönünü ve olası dönüşleri gösterir.
+- **ADX / +DI / -DI:** Trend gücünü izler; minimum ADX eşiği sinyalleri filtrelemeye yardımcı olur.
+- **Bollinger Bands:** Üst, alt ve orta bantları grafikte gösterir.
+- **AL / SAT etiketleri:** SuperTrend dönüşü ve ADX filtresi birlikte koşulları sağladığında oluşur.
+- **Alarm koşulları:** TradingView'de AL ve SAT alarmı kurulabilir.
+- **Kapanış onayı:** Varsayılan olarak sinyalin mum kapanışında doğrulanmasını bekler.
 
 ## TradingView'e ekleme
 
-1. Pine dosyasını açıp tüm kodu kopyala.
-2. TradingView'de bir grafik aç.
-3. Alt bölümden **Pine Editor**'ü aç.
-4. Kodu yapıştır ve **Save** ardından **Add to chart** seç.
-5. Alarm kurmak için alarm penceresinde **CNSZR AL** veya **CNSZR SAT** koşulunu seç.
+1. [CNSZR_Trading_Lab.pine](./CNSZR_Trading_Lab.pine) dosyasını aç.
+2. Kodu kopyala.
+3. TradingView'de bir grafik aç ve **Pine Editor** bölümüne gir.
+4. Kodu editöre yapıştırıp **Save** ve **Add to chart** seçeneklerini kullan.
+5. İndikatör ayarlarından ADX eşiğini ve Bollinger seçeneklerini ihtiyacına göre değiştir.
 
 ## İlk test için öneri
 
@@ -31,4 +29,15 @@ Dosya: `CNSZR_Trading_Lab_Trend_Signals.pine`
 - Bollinger Length: 20
 - Bollinger Deviation: 2.0
 
-Bunlar başlangıç ayarlarıdır; kârlılık garantisi değildir. Sinyalleri farklı hisselerde ve dönemlerde test etmeden gerçek işlemlerde kullanma. Bu sürüm bir **indikatördür**, otomatik alım-satım stratejisi veya yatırım tavsiyesi değildir.
+Bunlar başlangıç ayarlarıdır; kârlılık garantisi değildir. Farklı hisselerde ve dönemlerde test etmeden gerçek işlemlerde kullanma.
+
+## Önemli notlar
+
+- Bu sürüm bir **indikatördür**; otomatik emir vermez ve strateji performansı raporlamaz.
+- ADX, trendin yönünü değil gücünü ölçer.
+- Parametreler her hisse ve zaman diliminde aynı sonucu vermeyebilir. Geçmiş performans gelecekteki sonuçları garanti etmez.
+- Bu proje eğitim ve araştırma amaçlıdır; yatırım tavsiyesi değildir.
+
+## Sonraki geliştirme
+
+Bir sonraki aşamada ayrı bir Pine Script **strategy** dosyası hazırlayıp komisyon, kayma ve pozisyon kurallarıyla geçmiş test yapacağız.
